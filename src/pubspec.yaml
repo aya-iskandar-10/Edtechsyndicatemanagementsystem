@@ -1,0 +1,45 @@
+name: edtech_syndicate
+description: EdTech Syndicate Membership Management System
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  
+  # Supabase
+  supabase_flutter: ^2.0.0
+  
+  # UI & Icons
+  cupertino_icons: ^1.0.2
+  google_fonts: ^6.1.0
+  
+  # QR Code
+  qr_flutter: ^4.1.0
+  
+  # File handling
+  file_picker: ^6.1.1
+  path_provider: ^2.1.1
+  
+  # State management
+  provider: ^6.1.1
+  
+  # HTTP & Storage
+  shared_preferences: ^2.2.2
+  
+  # Date handling
+  intl: ^0.19.0
+  
+  # Image handling
+  image_picker: ^1.0.5
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true
