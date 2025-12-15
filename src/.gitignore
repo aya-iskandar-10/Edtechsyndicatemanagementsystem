@@ -1,0 +1,41 @@
+﻿# Android Studio
+.idea/
+*.iml
+*.iws
+
+# Flutter
+.dart_tool/
+.packages
+.pub-cache/
+.pub/
+build/
+.fvm/
+.flutter-plugins
+.flutter-plugins-dependencies
+
+# Android
+/android/app/debug/
+/android/app/profile/
+/android/app/release/
+android/.gradle/
+android/captures/
+android/local.properties
+
+# iOS
+/ios/Flutter/Flutter.podspec
+ios/Pods/
+ios/Runner.xcworkspace/xcuserdata/
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+Desktop.ini
+
+# VS Code
+.vscode/
+
+# Environment
+.env
+.env.*

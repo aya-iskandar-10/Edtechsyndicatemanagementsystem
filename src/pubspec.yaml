@@ -24,7 +24,7 @@ dependencies:
   qr_flutter: ^4.1.0
   
   # File handling
-  file_picker: ^6.1.1
+  file_picker: ^10.3.7
   path_provider: ^2.1.1
   
   # State management
@@ -34,7 +34,7 @@ dependencies:
   shared_preferences: ^2.2.2
   
   # Date handling
-  intl: ^0.19.0
+  intl: ^0.20.2
   
   # Image handling
   image_picker: ^1.0.5
@@ -42,7 +42,7 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^3.0.0
+  flutter_lints: ^6.0.0
 
 flutter:
   uses-material-design: true
