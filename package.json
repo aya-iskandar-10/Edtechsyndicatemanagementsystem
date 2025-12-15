@@ -46,6 +46,7 @@
           "package:file_picker": "*",
           "package:flutter": "*",
           "package:google_fonts": "*",
+          "package:http": "*",
           "package:intl": "*",
           "package:provider": "*",
           "package:qr_flutter": "*",

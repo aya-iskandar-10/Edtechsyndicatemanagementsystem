@@ -10,10 +10,11 @@ A comprehensive membership management system for EdTech syndicates, built with F
 - Dart SDK (2.17.0 or higher)
 - Android Studio / Xcode for emulators
 - Supabase account with project
+- Supabase CLI (for deploying backend)
 
 ### Installation
 
-1. **Install Flutter dependencies:**
+1. **Install dependencies:**
    ```bash
    flutter pub get
    ```
@@ -27,8 +28,40 @@ A comprehensive membership management system for EdTech syndicates, built with F
      anonKey: 'YOUR_SUPABASE_ANON_KEY', // Replace with your anon key
    );
    ```
+   
+   Get credentials from: Supabase Dashboard → Settings → API
 
-3. **Run the app:**
+3. **Deploy Backend Server:**
+   
+   The app requires the backend Edge Function to be deployed:
+   ```bash
+   # Install Supabase CLI
+   brew install supabase/tap/supabase  # macOS
+   npm install -g supabase             # Windows/Linux
+   
+   # Login and link project
+   supabase login
+   supabase link --project-ref YOUR_PROJECT_ID
+   
+   # Deploy the function
+   supabase functions deploy make-server-71a69640
+   
+   # Test it works
+   curl https://YOUR_PROJECT.supabase.co/functions/v1/make-server-71a69640/health
+   ```
+
+4. **Create Admin User:**
+   
+   See [CREATE_ADMIN.md](CREATE_ADMIN.md) for detailed instructions.
+   
+   Quick method via SQL:
+   ```sql
+   UPDATE auth.users
+   SET raw_user_meta_data = raw_user_meta_data || '{"role": "admin"}'::jsonb
+   WHERE email = 'admin@edtech.com';
+   ```
+
+5. **Run the app:**
    ```bash
    # For Android
    flutter run
@@ -289,10 +322,18 @@ This project is provided for educational purposes.
 ## 🆘 Support
 
 For issues:
-1. Check troubleshooting section
-2. Verify Supabase backend is running
-3. Check Flutter doctor: `flutter doctor`
-4. Review device logs: `flutter logs`
+1. Check [FLUTTER_TROUBLESHOOTING.md](FLUTTER_TROUBLESHOOTING.md) for detailed solutions
+2. See [CREATE_ADMIN.md](CREATE_ADMIN.md) for admin user setup
+3. Verify Supabase backend is deployed
+4. Check Flutter doctor: `flutter doctor`
+5. Review device logs: `flutter logs`
+
+### Common Issues Quick Links
+
+- **AuthRetryableFetchException**: See [FLUTTER_TROUBLESHOOTING.md](FLUTTER_TROUBLESHOOTING.md#problem-authretryablefetchexception-when-signing-in)
+- **Admin Role Not Working**: See [FLUTTER_TROUBLESHOOTING.md](FLUTTER_TROUBLESHOOTING.md#admin-role-not-detected) and [CREATE_ADMIN.md](CREATE_ADMIN.md)
+- **Backend Not Found**: Deploy backend with `supabase functions deploy make-server-71a69640`
+- **File Upload Issues**: Check platform permissions in troubleshooting guide
 
 ---
 

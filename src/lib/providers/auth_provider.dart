@@ -1,5 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 class AuthProvider with ChangeNotifier {
   final _supabase = Supabase.instance.client;
@@ -28,17 +30,32 @@ class AuthProvider with ChangeNotifier {
         _isAuthenticated = true;
         _userId = session.user.id;
         _accessToken = session.accessToken;
-        _userName = session.user.userMetadata?['name'] ?? session.user.email;
-        _isAdmin = session.user.userMetadata?['role'] == 'admin';
+        
+        // Get user metadata
+        final metadata = session.user.userMetadata;
+        _userName = metadata?['name'] ?? session.user.email;
+        _isAdmin = metadata?['role'] == 'admin';
+        
+        if (kDebugMode) {
+          print('Session found - User: $_userName, Admin: $_isAdmin');
+          print('User metadata: $metadata');
+        }
       } else {
         _isAuthenticated = false;
         _isAdmin = false;
         _userId = null;
         _accessToken = null;
         _userName = null;
+        
+        if (kDebugMode) {
+          print('No session found');
+        }
       }
     } catch (e) {
       _error = e.toString();
+      if (kDebugMode) {
+        print('Check session error: $e');
+      }
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -53,26 +70,46 @@ class AuthProvider with ChangeNotifier {
     try {
       _error = null;
       
-      // Call backend signup endpoint
-      final response = await _supabase.functions.invoke(
-        'make-server-71a69640/signup',
-        body: {
+      if (kDebugMode) {
+        print('Attempting signup for: $email');
+      }
+      
+      // Get Supabase URL
+      final supabaseUrl = _supabase.supabaseUrl;
+      final url = Uri.parse('$supabaseUrl/functions/v1/make-server-71a69640/signup');
+      
+      final response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': _supabase.supabaseKey,
+        },
+        body: jsonEncode({
           'email': email,
           'password': password,
           'name': name,
-        },
+        }),
       );
 
-      if (response.status == 200) {
+      if (kDebugMode) {
+        print('Signup response status: ${response.statusCode}');
+        print('Signup response body: ${response.body}');
+      }
+
+      if (response.statusCode == 200) {
         // Now sign in
         return await signIn(email: email, password: password);
       } else {
-        _error = response.data['error'] ?? 'Failed to sign up';
+        final errorData = jsonDecode(response.body);
+        _error = errorData['error'] ?? 'Failed to sign up';
         notifyListeners();
         return false;
       }
     } catch (e) {
-      _error = e.toString();
+      _error = 'Sign up error: ${e.toString()}';
+      if (kDebugMode) {
+        print('Signup error: $e');
+      }
       notifyListeners();
       return false;
     }
@@ -85,17 +122,33 @@ class AuthProvider with ChangeNotifier {
     try {
       _error = null;
       
+      if (kDebugMode) {
+        print('Attempting sign in for: $email');
+      }
+      
       final response = await _supabase.auth.signInWithPassword(
         email: email,
         password: password,
       );
 
+      if (kDebugMode) {
+        print('Sign in response - Session exists: ${response.session != null}');
+        print('User metadata: ${response.user?.userMetadata}');
+      }
+
       if (response.session != null) {
         _isAuthenticated = true;
         _userId = response.user?.id;
         _accessToken = response.session?.accessToken;
-        _userName = response.user?.userMetadata?['name'] ?? email;
-        _isAdmin = response.user?.userMetadata?['role'] == 'admin';
+        
+        final metadata = response.user?.userMetadata;
+        _userName = metadata?['name'] ?? email;
+        _isAdmin = metadata?['role'] == 'admin';
+        
+        if (kDebugMode) {
+          print('Sign in successful - User: $_userName, Admin: $_isAdmin');
+        }
+        
         notifyListeners();
         return true;
       } else {
@@ -104,19 +157,32 @@ class AuthProvider with ChangeNotifier {
         return false;
       }
     } catch (e) {
-      _error = e.toString();
+      _error = 'Sign in error: ${e.toString()}';
+      if (kDebugMode) {
+        print('Sign in error: $e');
+      }
       notifyListeners();
       return false;
     }
   }
 
   Future<void> signOut() async {
-    await _supabase.auth.signOut();
-    _isAuthenticated = false;
-    _isAdmin = false;
-    _userId = null;
-    _accessToken = null;
-    _userName = null;
-    notifyListeners();
+    try {
+      await _supabase.auth.signOut();
+      _isAuthenticated = false;
+      _isAdmin = false;
+      _userId = null;
+      _accessToken = null;
+      _userName = null;
+      notifyListeners();
+      
+      if (kDebugMode) {
+        print('Sign out successful');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Sign out error: $e');
+      }
+    }
   }
 }

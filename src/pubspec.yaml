@@ -13,6 +13,9 @@ dependencies:
   # Supabase
   supabase_flutter: ^2.0.0
   
+  # HTTP
+  http: ^1.1.0
+  
   # UI & Icons
   cupertino_icons: ^1.0.2
   google_fonts: ^6.1.0
