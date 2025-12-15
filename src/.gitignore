@@ -1,9 +1,4 @@
-﻿# Android Studio
-.idea/
-*.iml
-*.iws
-
-# Flutter
+﻿# Flutter/Dart
 .dart_tool/
 .packages
 .pub-cache/
@@ -13,16 +8,16 @@ build/
 .flutter-plugins
 .flutter-plugins-dependencies
 
-# Android
-/android/app/debug/
-/android/app/profile/
-/android/app/release/
+# Android - DO NOT IGNORE THESE:
+# !android/app/src/main/res/
+# !android/gradle/wrapper/
+
+# Android - IGNORE THESE:
 android/.gradle/
-android/captures/
 android/local.properties
+android/**/GeneratedPluginRegistrant.java
 
 # iOS
-/ios/Flutter/Flutter.podspec
 ios/Pods/
 ios/Runner.xcworkspace/xcuserdata/
 
@@ -32,6 +27,10 @@ ios/Runner.xcworkspace/xcuserdata/
 # Windows
 Thumbs.db
 Desktop.ini
+
+# Android Studio
+.idea/
+*.iml
 
 # VS Code
 .vscode/
