@@ -523,7 +523,6 @@ class _ApplicationFormScreenState extends State<ApplicationFormScreen> {
             if (_recommendationFile != null)
               _ReviewItem('Recommendation', '✓ Uploaded'),
           ]),
-          
           const SizedBox(height: 16),
           Container(
             padding: const EdgeInsets.all(16),

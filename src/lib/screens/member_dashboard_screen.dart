@@ -37,6 +37,8 @@ class _MemberDashboardScreenState extends State<MemberDashboardScreen> {
         title: const Text('Member Dashboard'),
         backgroundColor: const Color(0xFF2563EB),
         foregroundColor: Colors.white,
+        automaticallyImplyLeading: Navigator.canPop(context),
+
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),

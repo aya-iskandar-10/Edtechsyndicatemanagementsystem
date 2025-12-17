@@ -15,8 +15,8 @@ void main() async {
   
   // Initialize Supabase - Replace with your actual credentials
   await Supabase.initialize(
-    url: 'YOUR_SUPABASE_URL',
-    anonKey: 'YOUR_SUPABASE_ANON_KEY',
+    url: 'https://qtyrihyijpinzlhvuzzy.supabase.co',
+    anonKey: 'sb_publishable_An8B1QnoLCMBByITg1Yq-w_UZ4G2Moy',
   );
   
   runApp(const EdTechSyndicateApp());
@@ -100,11 +100,11 @@ class _AppNavigatorState extends State<AppNavigator> {
                 body: Center(child: CircularProgressIndicator()),
               );
             }
-            
+
             if (snapshot.data == true) {
               return const MemberDashboardScreen();
             }
-            
+
             return const ApplicationFormScreen();
           },
         );
@@ -115,7 +115,7 @@ class _AppNavigatorState extends State<AppNavigator> {
   Future<bool> _hasApplication() async {
     final authProvider = context.read<AuthProvider>();
     final appProvider = context.read<ApplicationProvider>();
-    
+
     if (authProvider.userId != null) {
       final app = await appProvider.getApplication(authProvider.userId!);
       return app != null;

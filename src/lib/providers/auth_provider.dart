@@ -2,6 +2,8 @@ import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
 
 class AuthProvider with ChangeNotifier {
   final _supabase = Supabase.instance.client;
@@ -73,16 +75,19 @@ class AuthProvider with ChangeNotifier {
       if (kDebugMode) {
         print('Attempting signup for: $email');
       }
-      
-      // Get Supabase URL
-      final supabaseUrl = _supabase.supabaseUrl;
+
+// Direct values (no dotenv needed)
+      final supabaseUrl = 'https://qtyrihyijpinzlhvuzzy.supabase.co';
+      final supabaseKey = 'sb_publishable_An8B1QnoLCMBByITg1Yq-w_UZ4G2Moy';
+
       final url = Uri.parse('$supabaseUrl/functions/v1/make-server-71a69640/signup');
-      
+
       final response = await http.post(
         url,
         headers: {
           'Content-Type': 'application/json',
-          'apikey': _supabase.supabaseKey,
+          'apikey': supabaseKey,
+          'Authorization': 'Bearer $supabaseKey',
         },
         body: jsonEncode({
           'email': email,
@@ -90,7 +95,6 @@ class AuthProvider with ChangeNotifier {
           'name': name,
         }),
       );
-
       if (kDebugMode) {
         print('Signup response status: ${response.statusCode}');
         print('Signup response body: ${response.body}');
