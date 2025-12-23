@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
-import '../providers/auth_provider.dart';
+import '../providers/admin_auth_provider.dart';
 import '../providers/application_provider.dart';
 import '../models/application.dart';
+import 'admin_login_screen.dart';
+import 'landing_page.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({Key? key}) : super(key: key);
@@ -22,8 +24,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     _loadApplications();
   }
 
-  Future<void> _loadApplications() async {
-    await context.read<ApplicationProvider>().fetchAllApplications();
+  Future<void> _loadApplications({String? statusFilter, String? searchQuery}) async {
+    await context.read<ApplicationProvider>().fetchAllApplications(
+      statusFilter: statusFilter,
+      searchQuery: searchQuery,
+    );
   }
 
   List<Application> _getFilteredApplications(List<Application> applications) {
@@ -62,10 +67,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () async {
-              await context.read<AuthProvider>().signOut();
+              await context.read<AdminAuthProvider>().logout();
               if (mounted) {
                 Navigator.of(context).pushAndRemoveUntil(
-                  MaterialPageRoute(builder: (context) => const SizedBox()),
+                  MaterialPageRoute(builder: (context) => const LandingPage()),
                   (route) => false,
                 );
               }
@@ -216,11 +221,14 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
     final success = await context.read<ApplicationProvider>().approveApplication(
           application.id,
-          expiryDate.toIso8601String(),
+          expiryDate,
         );
 
     if (mounted) {
       Navigator.pop(context);
+      if (success) {
+        await _loadApplications();
+      }
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(success ? 'Application approved!' : 'Failed to approve'),
@@ -258,6 +266,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
     if (mounted) {
       Navigator.pop(context);
+      if (success) {
+        await _loadApplications();
+      }
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(success ? 'Application rejected' : 'Failed to reject'),

@@ -1,12 +1,13 @@
 import 'package:flutter/foundation.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:uuid/uuid.dart';
 import '../models/application.dart';
+import '../database/database_helper.dart';
 
 class ApplicationProvider with ChangeNotifier {
-  final _supabase = Supabase.instance.client;
-  
+  final DatabaseHelper _dbHelper = DatabaseHelper.instance;
+  final _uuid = const Uuid();
+
   Application? _currentApplication;
   List<Application> _allApplications = [];
   bool _isLoading = false;
@@ -17,24 +18,37 @@ class ApplicationProvider with ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get error => _error;
 
-  Future<Application?> getApplication(String userId) async {
+  // Clear error
+  void clearError() {
+    _error = null;
+    notifyListeners();
+  }
+
+  // Clear application data
+  void clearApplication() {
+    _currentApplication = null;
+    notifyListeners();
+  }
+
+  Future<Application?> getApplicationByEmail(String email) async {
     try {
       _isLoading = true;
       _error = null;
       notifyListeners();
 
-      final response = await _supabase.functions.invoke(
-        'make-server-71a69640/application/$userId',
-      );
-
-      if (response.status == 200 && response.data != null) {
-        _currentApplication = Application.fromJson(response.data);
-        return _currentApplication;
+      if (kDebugMode) {
+        print('🔍 Getting application for email: $email');
       }
-      
-      return null;
+
+      final application = await _dbHelper.getApplicationByEmail(email);
+      _currentApplication = application;
+
+      return application;
     } catch (e) {
-      _error = e.toString();
+      _error = 'Error getting application: ${e.toString()}';
+      if (kDebugMode) {
+        print('❌ Exception in getApplicationByEmail: $e');
+      }
       return null;
     } finally {
       _isLoading = false;
@@ -60,44 +74,77 @@ class ApplicationProvider with ChangeNotifier {
       _error = null;
       notifyListeners();
 
-      final session = _supabase.auth.currentSession;
-      if (session == null) {
-        _error = 'Not authenticated';
-        _isLoading = false;
-        notifyListeners();
+      if (kDebugMode) {
+        print('📤 Submitting application for: $email');
+      }
+
+      // Check if application already exists for this email
+      final existing = await _dbHelper.getApplicationByEmail(email);
+      if (existing != null) {
+        _error = 'An application with this email already exists';
+        if (kDebugMode) {
+          print('❌ Application already exists for email: $email');
+        }
         return false;
       }
 
-      final response = await _supabase.functions.invoke(
-        'make-server-71a69640/application',
-        body: {
-          'fullName': fullName,
-          'email': email,
-          'phone': phone,
-          'position': position,
-          'organization': organization,
-          'yearsExperience': yearsExperience,
-          'education': education,
-          'specialization': specialization,
-          'linkedin': linkedin,
-          'motivation': motivation,
-          'files': files,
-        },
-        headers: {
-          'Authorization': 'Bearer ${session.accessToken}',
-        },
+      // Parse files if provided
+      ApplicationFiles? applicationFiles;
+      if (files != null) {
+        List<CertificateFile>? certificates;
+        if (files['certificates'] != null && files['certificates'] is List) {
+          certificates = (files['certificates'] as List).map((c) {
+            if (c is Map) {
+              return CertificateFile(
+                data: c['data'] ?? '',
+                name: c['name'] ?? '',
+              );
+            }
+            return CertificateFile(data: '', name: '');
+          }).toList();
+        }
+
+        applicationFiles = ApplicationFiles(
+          resume: files['resume'],
+          resumeName: files['resumeName'],
+          recommendation: files['recommendation'],
+          recommendationName: files['recommendationName'],
+          certificates: certificates,
+        );
+      }
+
+      // Create application
+      final application = Application(
+        id: _uuid.v4(),
+        userId: null, // No user account needed
+        fullName: fullName,
+        email: email,
+        phone: phone,
+        position: position,
+        organization: organization,
+        yearsExperience: yearsExperience,
+        education: education,
+        specialization: specialization,
+        linkedin: linkedin,
+        motivation: motivation,
+        status: ApplicationStatus.pending,
+        submittedAt: DateTime.now(),
+        files: applicationFiles,
       );
 
-      if (response.status == 200) {
-        // Refresh application
-        await getApplication(session.user.id);
-        return true;
-      } else {
-        _error = response.data['error'] ?? 'Failed to submit application';
-        return false;
+      // Save to database
+      await _dbHelper.insertApplication(application);
+
+      if (kDebugMode) {
+        print('✅ Application submitted successfully: ${application.id}');
       }
+
+      return true;
     } catch (e) {
-      _error = e.toString();
+      _error = 'Error submitting application: ${e.toString()}';
+      if (kDebugMode) {
+        print('❌ Exception during submission: $e');
+      }
       return false;
     } finally {
       _isLoading = false;
@@ -105,86 +152,118 @@ class ApplicationProvider with ChangeNotifier {
     }
   }
 
-  Future<void> fetchAllApplications() async {
+  Future<void> fetchAllApplications({String? statusFilter, String? searchQuery}) async {
     try {
       _isLoading = true;
       _error = null;
       notifyListeners();
 
-      final session = _supabase.auth.currentSession;
-      if (session == null) {
-        _error = 'Not authenticated';
-        _isLoading = false;
-        notifyListeners();
-        return;
+      if (kDebugMode) {
+        print('📋 Fetching all applications (admin)');
       }
 
-      final response = await _supabase.functions.invoke(
-        'make-server-71a69640/admin/applications',
-        headers: {
-          'Authorization': 'Bearer ${session.accessToken}',
-        },
+      _allApplications = await _dbHelper.getAllApplications(
+        statusFilter: statusFilter,
+        searchQuery: searchQuery,
       );
 
-      if (response.status == 200 && response.data is List) {
-        _allApplications = (response.data as List)
-            .map((json) => Application.fromJson(json))
-            .toList();
+      if (kDebugMode) {
+        print('✅ Loaded ${_allApplications.length} applications');
       }
     } catch (e) {
-      _error = e.toString();
+      _error = 'Error fetching applications: ${e.toString()}';
+      if (kDebugMode) {
+        print('❌ Exception fetching applications: $e');
+      }
     } finally {
       _isLoading = false;
       notifyListeners();
     }
   }
 
-  Future<bool> approveApplication(String applicationId, String expiryDate) async {
+  Future<bool> approveApplication(String applicationId, DateTime expiryDate) async {
     try {
-      final session = _supabase.auth.currentSession;
-      if (session == null) return false;
+      _isLoading = true;
+      notifyListeners();
 
-      final response = await _supabase.functions.invoke(
-        'make-server-71a69640/admin/application/$applicationId/approve',
-        body: {'expiryDate': expiryDate},
-        headers: {
-          'Authorization': 'Bearer ${session.accessToken}',
-        },
+      if (kDebugMode) {
+        print('✅ Approving application: $applicationId');
+      }
+
+      // Generate membership number
+      final membershipNumber = 'MEM-${DateTime.now().millisecondsSinceEpoch}';
+
+      final rowsAffected = await _dbHelper.updateApplicationStatus(
+        applicationId,
+        ApplicationStatus.approved,
+        expiryDate: expiryDate,
+        membershipNumber: membershipNumber,
       );
 
-      if (response.status == 200) {
+      if (rowsAffected > 0) {
         await fetchAllApplications();
+        if (kDebugMode) {
+          print('✅ Application approved successfully');
+        }
         return true;
       }
+
+      _error = 'Failed to approve application';
       return false;
     } catch (e) {
-      _error = e.toString();
-      notifyListeners();
+      _error = 'Error approving: ${e.toString()}';
+      if (kDebugMode) {
+        print('❌ Error approving application: $e');
+      }
       return false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
     }
   }
 
   Future<bool> rejectApplication(String applicationId) async {
     try {
-      final session = _supabase.auth.currentSession;
-      if (session == null) return false;
+      _isLoading = true;
+      notifyListeners();
 
-      final response = await _supabase.functions.invoke(
-        'make-server-71a69640/admin/application/$applicationId/reject',
-        headers: {
-          'Authorization': 'Bearer ${session.accessToken}',
-        },
+      if (kDebugMode) {
+        print('❌ Rejecting application: $applicationId');
+      }
+
+      final rowsAffected = await _dbHelper.updateApplicationStatus(
+        applicationId,
+        ApplicationStatus.rejected,
       );
 
-      if (response.status == 200) {
+      if (rowsAffected > 0) {
         await fetchAllApplications();
+        if (kDebugMode) {
+          print('✅ Application rejected');
+        }
         return true;
       }
+
+      _error = 'Failed to reject application';
       return false;
     } catch (e) {
-      _error = e.toString();
-      notifyListeners();
+      _error = 'Error rejecting: ${e.toString()}';
+      if (kDebugMode) {
+        print('❌ Error rejecting application: $e');
+      }
       return false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
     }
+  }
+
+  // Reset all state
+  void reset() {
+    _currentApplication = null;
+    _allApplications = [];
+    _isLoading = false;
+    _error = null;
+    notifyListeners();
   }
 }

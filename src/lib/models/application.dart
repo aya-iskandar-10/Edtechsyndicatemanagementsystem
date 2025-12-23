@@ -1,6 +1,6 @@
 class Application {
   final String id;
-  final String userId;
+  final String? userId; // Optional since users don't need accounts
   final String fullName;
   final String email;
   final String phone;
@@ -20,7 +20,7 @@ class Application {
 
   Application({
     required this.id,
-    required this.userId,
+    this.userId,
     required this.fullName,
     required this.email,
     required this.phone,

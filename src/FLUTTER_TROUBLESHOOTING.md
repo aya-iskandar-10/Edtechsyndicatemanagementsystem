@@ -62,7 +62,7 @@ The Flutter app requires the backend server to be deployed to Supabase Edge Func
 
 4. **Deploy the edge function:**
    ```bash
-   supabase functions deploy make-server-71a69640
+   supabase functions deploy make-make-server-71a69640-71a69640
    ```
 
 5. **Verify deployment:**
@@ -160,7 +160,7 @@ Then manually add role via Dashboard or SQL.
 **Check 3: Edge Function Status**
 ```bash
 # View function logs
-supabase functions logs make-server-71a69640
+supabase functions logs make-make-server-71a69640-71a69640
 
 # Test health endpoint
 curl https://YOUR_PROJECT.supabase.co/functions/v1/make-server-71a69640/health
@@ -234,7 +234,7 @@ flutter run
 2. Verify user is authenticated
 3. Check backend logs:
    ```bash
-   supabase functions logs make-server-71a69640
+   supabase functions logs make-make-server-71a69640-71a69640
    ```
 4. Manually check KV store in Supabase Dashboard:
    - Database → Table Editor
@@ -396,7 +396,7 @@ flutter analyze
 flutter pub get
 
 # View Supabase function logs
-supabase functions logs make-server-71a69640
+supabase functions logs make-make-server-71a69640-71a69640
 
 # Test backend health
 curl https://YOUR_PROJECT.supabase.co/functions/v1/make-server-71a69640/health
@@ -430,7 +430,7 @@ Most issues are caused by:
 ```bash
 # 1. Check credentials in lib/main.dart
 # 2. Deploy backend:
-supabase functions deploy make-server-71a69640
+supabase functions deploy make-make-server-71a69640-71a69640
 
 # 3. Test backend:
 curl https://YOUR_PROJECT.supabase.co/functions/v1/make-server-71a69640/health

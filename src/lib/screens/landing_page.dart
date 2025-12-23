@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'auth_screen.dart';
+import 'application_form_screen.dart';
+import 'admin_login_screen.dart';
 
 class LandingPage extends StatelessWidget {
   const LandingPage({Key? key}) : super(key: key);
@@ -75,17 +76,6 @@ class LandingPage extends StatelessWidget {
               ],
             ),
           ),
-          TextButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const AuthScreen(mode: AuthMode.signIn),
-                ),
-              );
-            },
-            child: const Text('Sign In'),
-          ),
         ],
       ),
     );
@@ -132,7 +122,7 @@ class LandingPage extends StatelessWidget {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => const AuthScreen(mode: AuthMode.signUp),
+                  builder: (context) => const ApplicationFormScreen(),
                 ),
               );
             },
@@ -152,6 +142,18 @@ class LandingPage extends StatelessWidget {
                 Icon(Icons.arrow_forward, size: 20),
               ],
             ),
+          ),
+          const SizedBox(height: 16),
+          TextButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const AdminLoginScreen(),
+                ),
+              );
+            },
+            child: const Text('Admin Login'),
           ),
         ],
       ),
@@ -253,7 +255,7 @@ class LandingPage extends StatelessWidget {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => const AuthScreen(mode: AuthMode.signUp),
+                  builder: (context) => const ApplicationFormScreen(),
                 ),
               );
             },

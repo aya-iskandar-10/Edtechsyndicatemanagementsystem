@@ -4,7 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:file_picker/file_picker.dart';
 import '../providers/application_provider.dart';
-import '../providers/auth_provider.dart';
+import 'landing_page.dart';
+
 
 class ApplicationFormScreen extends StatefulWidget {
   const ApplicationFormScreen({Key? key}) : super(key: key);
@@ -80,58 +81,166 @@ class _ApplicationFormScreenState extends State<ApplicationFormScreen> {
     return 'data:application/octet-stream;base64,${base64Encode(bytes)}';
   }
 
-  Future<void> _submitApplication() async {
-    // Prepare files
-    Map<String, dynamic>? filesData;
-    
-    if (_resumeFile != null) {
-      filesData = {
-        'resume': await _fileToBase64(_resumeFile!),
-        'resumeName': _resumeFile!.path.split('/').last,
-      };
-      
-      if (_certificateFiles.isNotEmpty) {
-        filesData['certificates'] = await Future.wait(
-          _certificateFiles.map((file) async => {
-            'data': await _fileToBase64(file),
-            'name': file.path.split('/').last,
-          }),
-        );
-      }
-      
-      if (_recommendationFile != null) {
-        filesData['recommendation'] = await _fileToBase64(_recommendationFile!);
-        filesData['recommendationName'] = _recommendationFile!.path.split('/').last;
-      }
-    }
+// Replace the _submitApplication method in application_form_screen.dart
 
-    final appProvider = context.read<ApplicationProvider>();
-    final success = await appProvider.submitApplication(
-      fullName: _fullNameController.text,
-      email: _emailController.text,
-      phone: _phoneController.text,
-      position: _positionController.text,
-      organization: _organizationController.text,
-      yearsExperience: _yearsExperience,
-      education: _education,
-      specialization: _specializationController.text,
-      linkedin: _linkedinController.text.isEmpty ? null : _linkedinController.text,
-      motivation: _motivationController.text,
-      files: filesData,
+  Future<void> _submitApplication() async {
+    // Show loading dialog
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => WillPopScope(
+        onWillPop: () async => false,
+        child: const Center(
+          child: Card(
+            child: Padding(
+              padding: EdgeInsets.all(24.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CircularProgressIndicator(),
+                  SizedBox(height: 16),
+                  Text(
+                    'Submitting your application...',
+                    style: TextStyle(fontSize: 16),
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    'Please wait',
+                    style: TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
     );
 
-    if (success && mounted) {
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (context) => const SizedBox()),
-        (route) => false,
+    try {
+      // Prepare files
+      Map<String, dynamic>? filesData;
+
+      if (_resumeFile != null) {
+        filesData = {
+          'resume': await _fileToBase64(_resumeFile!),
+          'resumeName': _resumeFile!.path.split('/').last,
+        };
+
+        if (_certificateFiles.isNotEmpty) {
+          filesData['certificates'] = await Future.wait(
+            _certificateFiles.map((file) async => {
+              'data': await _fileToBase64(file),
+              'name': file.path.split('/').last,
+            }),
+          );
+        }
+
+        if (_recommendationFile != null) {
+          filesData['recommendation'] = await _fileToBase64(_recommendationFile!);
+          filesData['recommendationName'] = _recommendationFile!.path.split('/').last;
+        }
+      }
+
+      final appProvider = context.read<ApplicationProvider>();
+      final success = await appProvider.submitApplication(
+        fullName: _fullNameController.text.trim(),
+        email: _emailController.text.trim(),
+        phone: _phoneController.text.trim(),
+        position: _positionController.text.trim(),
+        organization: _organizationController.text.trim(),
+        yearsExperience: _yearsExperience,
+        education: _education,
+        specialization: _specializationController.text.trim(),
+        linkedin: _linkedinController.text.trim().isEmpty ? null : _linkedinController.text.trim(),
+        motivation: _motivationController.text.trim(),
+        files: filesData,
       );
-    } else if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(appProvider.error ?? 'Failed to submit application'),
-          backgroundColor: Colors.red,
-        ),
-      );
+
+      // Close loading dialog
+      if (mounted) {
+        Navigator.of(context).pop();
+      }
+
+      if (success && mounted) {
+        // Success - show success dialog
+        await showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => AlertDialog(
+            title: const Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.green, size: 32),
+                SizedBox(width: 12),
+                Text('Success!'),
+              ],
+            ),
+            content: const Text(
+              'Your application has been submitted successfully and is now pending review by our admissions team.',
+            ),
+            actions: [
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  // Navigate back to landing page
+                  if (mounted) {
+                    Navigator.of(context).pushAndRemoveUntil(
+                      MaterialPageRoute(
+                        builder: (context) => const LandingPage(),
+                      ),
+                      (route) => false,
+                    );
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green,
+                  foregroundColor: Colors.white,
+                ),
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+        );
+      } else if (mounted && appProvider.error != null) {
+        // Show error dialog
+        await showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Row(
+              children: [
+                Icon(Icons.error, color: Colors.red, size: 32),
+                SizedBox(width: 12),
+                Text('Error'),
+              ],
+            ),
+            content: Text(
+              appProvider.error ?? 'Failed to submit application. Please try again.',
+            ),
+            actions: [
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+        );
+      }
+    } catch (e) {
+      // Close loading dialog
+      if (mounted) {
+        Navigator.of(context).pop();
+      }
+
+      // Show error
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 

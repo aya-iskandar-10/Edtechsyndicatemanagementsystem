@@ -10,9 +10,6 @@ dependencies:
   flutter:
     sdk: flutter
   
-  # Supabase
-  supabase_flutter: ^2.0.0
-  
   # HTTP
   http: ^1.1.0
   
@@ -32,6 +29,11 @@ dependencies:
   
   # HTTP & Storage
   shared_preferences: ^2.2.2
+  
+  # Database
+  sqflite: ^2.3.0
+  path: ^1.9.0
+  uuid: ^4.5.1
   
   # Date handling
   intl: ^0.20.2

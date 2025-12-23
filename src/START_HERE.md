@@ -146,7 +146,7 @@ flutter pub get
 # 3. Deploy backend
 supabase login
 supabase link --project-ref YOUR_PROJECT_ID
-supabase functions deploy make-server-71a69640
+supabase functions deploy make-make-server-71a69640-71a69640
 
 # 4. Create admin (run in Supabase SQL Editor)
 UPDATE auth.users

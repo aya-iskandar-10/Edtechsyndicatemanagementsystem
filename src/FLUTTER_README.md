@@ -44,7 +44,7 @@ A comprehensive membership management system for EdTech syndicates, built with F
    supabase link --project-ref YOUR_PROJECT_ID
    
    # Deploy the function
-   supabase functions deploy make-server-71a69640
+   supabase functions deploy make-make-server-71a69640-71a69640
    
    # Test it works
    curl https://YOUR_PROJECT.supabase.co/functions/v1/make-server-71a69640/health

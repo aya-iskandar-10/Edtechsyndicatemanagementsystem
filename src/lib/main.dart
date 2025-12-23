@@ -1,24 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'providers/auth_provider.dart';
+import 'providers/admin_auth_provider.dart';
 import 'providers/application_provider.dart';
 import 'screens/landing_page.dart';
-import 'screens/auth_screen.dart';
-import 'screens/application_form_screen.dart';
-import 'screens/member_dashboard_screen.dart';
 import 'screens/admin_dashboard_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
-  // Initialize Supabase - Replace with your actual credentials
-  await Supabase.initialize(
-    url: 'https://qtyrihyijpinzlhvuzzy.supabase.co',
-    anonKey: 'sb_publishable_An8B1QnoLCMBByITg1Yq-w_UZ4G2Moy',
-  );
-  
+
   runApp(const EdTechSyndicateApp());
 }
 
@@ -29,7 +19,7 @@ class EdTechSyndicateApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProvider(create: (_) => AdminAuthProvider()),
         ChangeNotifierProvider(create: (_) => ApplicationProvider()),
       ],
       child: MaterialApp(
@@ -46,80 +36,76 @@ class EdTechSyndicateApp extends StatelessWidget {
           scaffoldBackgroundColor: const Color(0xFFF8FAFC),
         ),
         home: const AppNavigator(),
+        // Add error builder to catch widget errors
+        builder: (context, widget) {
+          ErrorWidget.builder = (FlutterErrorDetails errorDetails) {
+            return Scaffold(
+              body: Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(
+                        Icons.error_outline,
+                        color: Colors.red,
+                        size: 64,
+                      ),
+                      const SizedBox(height: 16),
+                      const Text(
+                        'Something went wrong',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        errorDetails.exception.toString(),
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(color: Colors.grey),
+                      ),
+                      const SizedBox(height: 24),
+                      ElevatedButton(
+                        onPressed: () {
+                          // Try to restart
+                          Navigator.of(context).pushAndRemoveUntil(
+                            MaterialPageRoute(
+                              builder: (context) => const LandingPage(),
+                            ),
+                            (route) => false,
+                          );
+                        },
+                        child: const Text('Restart App'),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          };
+          return widget!;
+        },
       ),
     );
   }
 }
 
-class AppNavigator extends StatefulWidget {
+class AppNavigator extends StatelessWidget {
   const AppNavigator({Key? key}) : super(key: key);
 
   @override
-  State<AppNavigator> createState() => _AppNavigatorState();
-}
-
-class _AppNavigatorState extends State<AppNavigator> {
-  @override
-  void initState() {
-    super.initState();
-    _checkSession();
-  }
-
-  Future<void> _checkSession() async {
-    final authProvider = context.read<AuthProvider>();
-    await authProvider.checkSession();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return Consumer<AuthProvider>(
+    return Consumer<AdminAuthProvider>(
       builder: (context, authProvider, _) {
-        if (authProvider.isLoading) {
-          return const Scaffold(
-            body: Center(
-              child: CircularProgressIndicator(),
-            ),
-          );
-        }
-
-        if (!authProvider.isAuthenticated) {
-          return const LandingPage();
-        }
-
-        // Check if user is admin
-        if (authProvider.isAdmin) {
+        // If admin is authenticated, show admin dashboard
+        if (authProvider.isAuthenticated) {
           return const AdminDashboardScreen();
         }
-
-        // Check if user has submitted application
-        return FutureBuilder<bool>(
-          future: _hasApplication(),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Scaffold(
-                body: Center(child: CircularProgressIndicator()),
-              );
-            }
-
-            if (snapshot.data == true) {
-              return const MemberDashboardScreen();
-            }
-
-            return const ApplicationFormScreen();
-          },
-        );
+        
+        // Otherwise show landing page for regular users
+        return const LandingPage();
       },
     );
-  }
-
-  Future<bool> _hasApplication() async {
-    final authProvider = context.read<AuthProvider>();
-    final appProvider = context.read<ApplicationProvider>();
-
-    if (authProvider.userId != null) {
-      final app = await appProvider.getApplication(authProvider.userId!);
-      return app != null;
-    }
-    return false;
   }
 }

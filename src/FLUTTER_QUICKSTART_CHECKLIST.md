@@ -82,7 +82,7 @@ supabase login
 supabase link --project-ref YOUR_PROJECT_ID
 
 # Deploy
-supabase functions deploy make-server-71a69640
+supabase functions deploy make-make-server-71a69640-71a69640
 ```
 
 - [ ] Login successful
@@ -225,7 +225,7 @@ flutter run
 ### ❌ "Failed to fetch" errors
 ```bash
 # Re-deploy backend
-supabase functions deploy make-server-71a69640
+supabase functions deploy make-make-server-71a69640-71a69640
 
 # Test health
 curl https://YOUR_PROJECT.supabase.co/functions/v1/make-server-71a69640/health

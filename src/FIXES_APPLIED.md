@@ -113,7 +113,7 @@ Run with `flutter run -v` to see all logs.
 1. **Configure Supabase credentials** in `lib/main.dart`
 2. **Deploy backend:**
    ```bash
-   supabase functions deploy make-server-71a69640
+   supabase functions deploy make-make-server-71a69640-71a69640
    ```
 3. **Run app in debug mode:**
    ```bash
@@ -172,7 +172,7 @@ supabase login
 supabase link --project-ref YOUR_PROJECT_ID
 
 # Deploy
-supabase functions deploy make-server-71a69640
+supabase functions deploy make-make-server-71a69640-71a69640
 
 # Verify
 curl https://YOUR_PROJECT.supabase.co/functions/v1/make-server-71a69640/health
