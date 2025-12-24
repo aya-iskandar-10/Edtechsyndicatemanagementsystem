@@ -1,6 +1,5 @@
+import 'package:edtech_syndicate/screens/UnifiedLoginScreen.dart';
 import 'package:flutter/material.dart';
-import 'application_form_screen.dart';
-import 'admin_login_screen.dart';
 
 class LandingPage extends StatelessWidget {
   const LandingPage({Key? key}) : super(key: key);
@@ -12,22 +11,11 @@ class LandingPage extends StatelessWidget {
         child: SingleChildScrollView(
           child: Column(
             children: [
-              // Header
               _buildHeader(context),
-              
-              // Hero Section
               _buildHeroSection(context),
-              
-              // Features
               _buildFeatures(),
-              
-              // Benefits
               _buildBenefits(),
-              
-              // CTA
               _buildCTA(context),
-              
-              // Footer
               _buildFooter(),
             ],
           ),
@@ -76,6 +64,22 @@ class LandingPage extends StatelessWidget {
               ],
             ),
           ),
+          OutlinedButton.icon(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const SimplifiedUnifiedLoginScreen(),
+                ),
+              );
+            },
+            icon: const Icon(Icons.login, size: 18),
+            label: const Text('Sign In'),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: const Color(0xFF2563EB),
+              side: const BorderSide(color: Color(0xFF2563EB)),
+            ),
+          ),
         ],
       ),
     );
@@ -117,19 +121,21 @@ class LandingPage extends StatelessWidget {
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 32),
+          
+          // Primary CTA Button - Get Started
           ElevatedButton(
             onPressed: () {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => const ApplicationFormScreen(),
+                  builder: (context) => const SimplifiedUnifiedLoginScreen(),
                 ),
               );
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF2563EB),
               foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 18),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
@@ -137,23 +143,19 @@ class LandingPage extends StatelessWidget {
             child: const Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text('Apply for Membership', style: TextStyle(fontSize: 16)),
-                SizedBox(width: 8),
-                Icon(Icons.arrow_forward, size: 20),
+                Text('Get Started', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                SizedBox(width: 12),
+                Icon(Icons.arrow_forward, size: 22),
               ],
             ),
           ),
+          
           const SizedBox(height: 16),
-          TextButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const AdminLoginScreen(),
-                ),
-              );
-            },
-            child: const Text('Admin Login'),
+          
+          // Info text
+          const Text(
+            'Create an account or sign in to apply',
+            style: TextStyle(fontSize: 14, color: Colors.grey),
           ),
         ],
       ),
@@ -165,6 +167,12 @@ class LandingPage extends StatelessWidget {
       padding: const EdgeInsets.all(24),
       child: Column(
         children: [
+          const Text(
+            'Why Join Us?',
+            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 24),
           _FeatureCard(
             icon: Icons.people,
             title: 'Professional Network',
@@ -216,7 +224,7 @@ class LandingPage extends StatelessWidget {
           _BenefitItem('Priority conference registration'),
           _BenefitItem('Professional development workshops'),
           _BenefitItem('Networking with industry leaders'),
-          _BenefitItem('Digital membership badge'),
+          _BenefitItem('Digital membership badge with QR code'),
           _BenefitItem('Career advancement resources'),
         ],
       ),
@@ -245,7 +253,7 @@ class LandingPage extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           const Text(
-            'Start your application today and become part of our professional community.',
+            'Create your account and start your membership application today.',
             style: TextStyle(color: Colors.white70, fontSize: 16),
             textAlign: TextAlign.center,
           ),
@@ -255,19 +263,37 @@ class LandingPage extends StatelessWidget {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => const ApplicationFormScreen(),
+                  builder: (context) => const SimplifiedUnifiedLoginScreen(),
                 ),
               );
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.white,
               foregroundColor: const Color(0xFF2563EB),
-              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 18),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
             ),
-            child: const Text('Start Application', style: TextStyle(fontSize: 16)),
+            child: const Text('Join Now', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          ),
+          const SizedBox(height: 16),
+          TextButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const SimplifiedUnifiedLoginScreen(),
+                ),
+              );
+            },
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.white,
+            ),
+            child: const Text(
+              'Already have an account? Sign in →',
+              style: TextStyle(decoration: TextDecoration.underline),
+            ),
           ),
         ],
       ),

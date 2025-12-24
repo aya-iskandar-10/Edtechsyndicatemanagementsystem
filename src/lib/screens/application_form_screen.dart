@@ -1,14 +1,16 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:edtech_syndicate/screens/UserDashboardScreen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:file_picker/file_picker.dart';
 import '../providers/application_provider.dart';
 import 'landing_page.dart';
 
-
 class ApplicationFormScreen extends StatefulWidget {
-  const ApplicationFormScreen({Key? key}) : super(key: key);
+  final String? userEmail; // Pre-filled email from registration
+  
+  const ApplicationFormScreen({Key? key, this.userEmail}) : super(key: key);
 
   @override
   State<ApplicationFormScreen> createState() => _ApplicationFormScreenState();
@@ -20,7 +22,6 @@ class _ApplicationFormScreenState extends State<ApplicationFormScreen> {
 
   // Form controllers
   final _fullNameController = TextEditingController();
-  final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
   final _positionController = TextEditingController();
   final _organizationController = TextEditingController();
@@ -37,9 +38,15 @@ class _ApplicationFormScreenState extends State<ApplicationFormScreen> {
   File? _recommendationFile;
 
   @override
+  void initState() {
+    super.initState();
+    // Email is now passed as parameter, no need to set it in controller
+    // The email controller is no longer used
+  }
+
+  @override
   void dispose() {
     _fullNameController.dispose();
-    _emailController.dispose();
     _phoneController.dispose();
     _positionController.dispose();
     _organizationController.dispose();
@@ -80,8 +87,6 @@ class _ApplicationFormScreenState extends State<ApplicationFormScreen> {
     final bytes = await file.readAsBytes();
     return 'data:application/octet-stream;base64,${base64Encode(bytes)}';
   }
-
-// Replace the _submitApplication method in application_form_screen.dart
 
   Future<void> _submitApplication() async {
     // Show loading dialog
@@ -144,7 +149,7 @@ class _ApplicationFormScreenState extends State<ApplicationFormScreen> {
       final appProvider = context.read<ApplicationProvider>();
       final success = await appProvider.submitApplication(
         fullName: _fullNameController.text.trim(),
-        email: _emailController.text.trim(),
+        email: widget.userEmail!, // Use the passed email
         phone: _phoneController.text.trim(),
         position: _positionController.text.trim(),
         organization: _organizationController.text.trim(),
@@ -162,6 +167,10 @@ class _ApplicationFormScreenState extends State<ApplicationFormScreen> {
       }
 
       if (success && mounted) {
+        // Get the submitted application
+        final appProvider = context.read<ApplicationProvider>();
+        final application = await appProvider.getApplicationByEmail(widget.userEmail!);
+        
         // Success - show success dialog
         await showDialog(
           context: context,
@@ -175,10 +184,11 @@ class _ApplicationFormScreenState extends State<ApplicationFormScreen> {
               ],
             ),
             content: const Text(
-              'Your application has been submitted successfully and is now pending review by our admissions team.',
+              'Your application has been submitted successfully!\n\n'
+              'You can now view your application status.',
             ),
             actions: [
-              ElevatedButton(
+              TextButton(
                 onPressed: () {
                   Navigator.of(context).pop();
                   // Navigate back to landing page
@@ -191,11 +201,29 @@ class _ApplicationFormScreenState extends State<ApplicationFormScreen> {
                     );
                   }
                 },
+                child: const Text('Later'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  // Navigate to user dashboard to check status
+                  if (mounted && application != null) {
+                    Navigator.of(context).pushAndRemoveUntil(
+                      MaterialPageRoute(
+                        builder: (context) => UserDashboardScreen(
+                          email: widget.userEmail!,
+                          application: application,
+                        ),
+                      ),
+                      (route) => false,
+                    );
+                  }
+                },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.green,
                   foregroundColor: Colors.white,
                 ),
-                child: const Text('OK'),
+                child: const Text('View Status'),
               ),
             ],
           ),
@@ -257,8 +285,8 @@ class _ApplicationFormScreenState extends State<ApplicationFormScreen> {
           // Progress indicator
           Container(
             padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
                 colors: [Color(0xFF2563EB), Color(0xFF9333EA)],
               ),
             ),
@@ -378,20 +406,53 @@ class _ApplicationFormScreenState extends State<ApplicationFormScreen> {
             style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 24),
+          
+          // Email display (read-only)
+          if (widget.userEmail != null)
+            Container(
+              padding: const EdgeInsets.all(16),
+              margin: const EdgeInsets.only(bottom: 16),
+              decoration: BoxDecoration(
+                color: Colors.blue.shade50,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.blue.shade200),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.email, color: Colors.blue.shade700),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Email Address',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.blue.shade700,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          widget.userEmail!,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Icon(Icons.lock, color: Colors.blue.shade300, size: 20),
+                ],
+              ),
+            ),
+          
           TextFormField(
             controller: _fullNameController,
             decoration: const InputDecoration(
               labelText: 'Full Name *',
-              border: OutlineInputBorder(),
-            ),
-            validator: (v) => v?.isEmpty ?? true ? 'Required' : null,
-          ),
-          const SizedBox(height: 16),
-          TextFormField(
-            controller: _emailController,
-            keyboardType: TextInputType.emailAddress,
-            decoration: const InputDecoration(
-              labelText: 'Email Address *',
               border: OutlineInputBorder(),
             ),
             validator: (v) => v?.isEmpty ?? true ? 'Required' : null,
@@ -609,7 +670,8 @@ class _ApplicationFormScreenState extends State<ApplicationFormScreen> {
           
           _ReviewSection('Personal Information', [
             _ReviewItem('Name', _fullNameController.text),
-            _ReviewItem('Email', _emailController.text),
+            if (widget.userEmail != null)
+              _ReviewItem('Email', widget.userEmail!),
             _ReviewItem('Phone', _phoneController.text),
           ]),
           
